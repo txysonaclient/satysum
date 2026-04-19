@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SatySum</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#fff}
+.page{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);will-change:transform}
+#loading{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s}
+.load-logo{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 32% 32%,#c0ddff,#ddbdff,#ffd6e8);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:38px;font-weight:900;color:#111;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.load-ring{width:34px;height:34px;border:3px solid #eee;border-top-color:#5B8EF0;border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#pg-auth{align-items:center;justify-content:center;padding:28px 28px 90px;background:#fff}
+.auth-logo-area{display:flex;flex-direction:column;align-items:center;margin-bottom:38px}
+.auth-logo{width:118px;height:118px;border-radius:50%;background:radial-gradient(circle at 32% 32%,#c0ddff,#ddbdff,#ffd6e8);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:56px;font-weight:900;color:#111;margin-bottom:14px;box-shadow:0 8px 32px rgba(91,142,240,0.2),0 0 0 4px rgba(91,142,240,0.08)}
+.auth-logo img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.auth-appname{font-family:'Outfit',sans-serif;font-size:32px;font-weight:900;color:#111;letter-spacing:-0.5px}
+.auth-form{width:100%;max-width:316px}
+.auth-notice{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;text-align:center;display:none}
+.auth-notice.err{background:#fff0f0;color:#c33;display:block;border:1px solid #fcc}
+.auth-notice.ok{background:#f0fff4;color:#2a7a3a;display:block;border:1px solid #b2f0c5}
+.a-inp{width:100%;padding:16px 18px;border:2.5px dashed #555;border-radius:13px;font-family:'Nunito',sans-serif;font-size:17px;color:#444;background:#fff;margin-bottom:16px;outline:none;transition:border-color .2s,border-style .2s}
+.a-inp:focus{border-color:#5B8EF0;border-style:solid}
+.a-inp::placeholder{color:#bbb}
+.a-main-btn{display:block;margin:2px auto;padding:14px 54px;background:#7ab8f0;color:#222;border:none;border-radius:30px;font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(91,142,240,0.32);transition:all .18s}
+.a-main-btn:active{transform:scale(0.97);background:#5B8EF0;color:#fff}
+.a-link-btn{display:block;text-align:center;margin-top:14px;padding:8px;background:none;border:none;color:#5a90d5;font-family:'Nunito',sans-serif;font-size:17px;font-weight:600;text-decoration:underline;cursor:pointer}
+.tagline-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(140,140,145,0.45);backdrop-filter:blur(8px);padding:14px 20px;text-align:center;font-family:'Nunito',sans-serif;font-size:14px;color:#555;font-style:italic}
+.admin-entry-btn{position:fixed;bottom:62px;left:14px;z-index:10;padding:6px 13px;background:rgba(240,240,245,0.9);border:1.5px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;color:#888;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);transition:all .18s}
+.admin-entry-btn:active{background:#e8e8ec;color:#555}
+#admin-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
+#admin-overlay.show{display:flex}
+.admin-modal{background:#fff;border-radius:20px;padding:30px 26px 24px;width:90%;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+.admin-modal h2{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#111;margin-bottom:6px;text-align:center}
+.admin-modal p{font-size:13px;color:#999;text-align:center;margin-bottom:20px}
+.adm-inp{width:100%;padding:13px 16px;border:2px solid #e5e5e5;border-radius:11px;font-family:'Nunito',sans-serif;font-size:15px;color:#333;background:#fafafa;outline:none;margin-bottom:12px;transition:border-color .2s}
+.adm-inp:focus{border-color:#5B8EF0;background:#fff}
+.adm-login-btn{width:100%;padding:13px;background:#5B8EF0;color:#fff;border:none;border-radius:11px;font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:all .18s;margin-top:4px}
+.adm-login-btn:active{background:#4070d0}
+.adm-cancel-btn{width:100%;padding:10px;background:none;border:none;color:#aaa;font-family:'Nunito',sans-serif;font-size:14px;cursor:pointer;margin-top:8px}
+.adm-err{background:#fff0f0;color:#c33;border:1px solid #fcc;border-radius:8px;padding:8px 12px;font-size:13px;text-align:center;margin-bottom:10px;display:none}
+.adm-err.show{display:block}
+#pg-admin{flex-direction:column;background:#f7f8fc}
+.adm-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border-bottom:2px solid #eee;flex-shrink:0}
+.adm-back-btn{background:#f0f0f3;border:none;border-radius:8px;padding:8px 13px;font-size:16px;cursor:pointer;font-family:'Nunito',sans-serif;color:#555}
+.adm-header-title{flex:1;font-family:'Outfit',sans-serif;font-size:18px;font-weight:900;color:#111}
+.adm-badge{background:#5B8EF0;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;font-family:'Outfit',sans-serif}
+.adm-body{flex:1;overflow-y:auto;padding:16px 14px 30px;-webkit-overflow-scrolling:touch}
+.adm-section{background:#fff;border-radius:16px;padding:18px 16px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.adm-section-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;color:#333;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.adm-field-label{font-size:13px;color:#777;font-weight:600;margin-bottom:6px}
+.adm-field{width:100%;padding:11px 14px;border:1.5px solid #e5e5e5;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;color:#333;background:#fafafa;outline:none;margin-bottom:10px;transition:border-color .2s}
+.adm-field:focus{border-color:#5B8EF0;background:#fff}
+.adm-add-btn{width:100%;padding:12px;background:#5B8EF0;color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .18s}
+.adm-add-btn:active{background:#4070d0;transform:scale(0.98)}
+.adm-add-btn:disabled{background:#aaa;cursor:not-allowed}
+.adm-success{background:#f0fff4;color:#2a7a3a;border:1px solid #b2f0c5;border-radius:8px;padding:8px 12px;font-size:13px;text-align:center;margin-top:10px;display:none}
+.adm-success.show{display:block}
+.adm-saving{text-align:center;padding:8px;color:#5B8EF0;font-size:13px;display:none}
+.adm-saving.show{display:block}
+.adm-list-wrap{margin-top:14px;border-top:1.5px solid #f0f0f0;padding-top:12px}
+.adm-list-title{font-size:12px;color:#aaa;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+.adm-list-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5}
+.adm-list-item:last-child{border-bottom:none}
+.adm-list-thumb{width:54px;height:32px;object-fit:cover;border-radius:6px;background:#ddd;flex-shrink:0}
+.adm-list-info{flex:1;min-width:0}
+.adm-list-name{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-list-sub{font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-del-btn{background:#fff0f0;border:none;border-radius:7px;padding:6px 10px;color:#e05555;font-size:13px;cursor:pointer;flex-shrink:0;font-weight:700}
+.adm-del-btn:active{background:#fdd}
+.adm-msg-textarea{width:100%;padding:11px 14px;border:1.5px solid #e5e5e5;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;color:#333;background:#fafafa;outline:none;margin-bottom:10px;resize:none;height:90px;transition:border-color .2s}
+.adm-msg-textarea:focus{border-color:#5B8EF0;background:#fff}
+.adm-msg-item{padding:10px 12px;background:#f7f8fc;border-radius:10px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.adm-msg-text{flex:1;font-size:13px;color:#444;line-height:1.5;word-break:break-word}
+.adm-msg-time{font-size:11px;color:#bbb;margin-top:3px}
+.adm-empty{text-align:center;padding:16px;color:#ccc;font-size:13px}
+#pg-videos{flex-direction:column}
+.v-header{display:flex;align-items:center;gap:9px;padding:10px 12px;background:#fff;border-bottom:2.5px solid #111;flex-shrink:0}
+.srch-wrap{flex:1;position:relative;display:flex;align-items:center}
+.srch-ico{position:absolute;left:11px;font-size:15px;pointer-events:none}
+.srch-inp{width:100%;padding:9px 14px 9px 34px;border:1.5px solid #d5d5d5;border-radius:22px;font-family:'Nunito',sans-serif;font-size:14px;background:#f4f4f6;outline:none;transition:all .2s}
+.srch-inp:focus{background:#fff;border-color:#5B8EF0;box-shadow:0 0 0 3px rgba(91,142,240,0.12)}
+.hdr-msg-btn{padding:9px 16px;background:#7ab8f0;color:#fff;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 10px rgba(91,142,240,0.3);transition:all .15s}
+.hdr-msg-btn:active{background:#5B8EF0}
+.v-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.v-card{cursor:pointer;border-bottom:2.5px solid #111;transition:background .12s}
+.v-card:active{background:#f3f4f6}
+.v-thumb-wrap{width:100%;aspect-ratio:16/9;background:#1a1a1a;position:relative;overflow:hidden}
+.v-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+.v-play-ovr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.15)}
+.v-play-circle{width:54px;height:54px;background:rgba(255,255,255,0.88);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,0.3)}
+.v-tri{width:0;height:0;border-style:solid;border-width:11px 0 11px 19px;border-color:transparent transparent transparent #222;margin-left:4px}
+.v-title-bar{padding:10px 14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#222;background:#eeeeee;border-top:1.5px solid #ccc}
+.empty-vids{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 24px;color:#ccc;gap:12px;text-align:center}
+#pg-player{flex-direction:column;background:#000}
+.p-header{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border-bottom:1.5px solid #e5e5e5;flex-shrink:0}
+.bk-btn{background:#e8e8ea;border:none;border-radius:8px;padding:8px 13px;font-size:17px;cursor:pointer;transition:background .15s;font-family:'Nunito',sans-serif}
+.bk-btn:active{background:#d5d5d8}
+.p-vid-title{flex:1;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-embed{width:100%;aspect-ratio:16/9;background:#000;flex-shrink:0}
+.p-embed iframe{width:100%;height:100%;border:none;display:block}
+.sugg-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#fff;overscroll-behavior-y:contain}
+.sugg-hdr{padding:11px 14px 6px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid #f0f0f0}
+.sugg-item{display:flex;gap:11px;padding:10px 12px;cursor:pointer;border-bottom:1px solid #f2f2f2;transition:background .12s;align-items:center}
+.sugg-item:active{background:#f5f5f7}
+.sugg-thumb{width:100px;height:56px;object-fit:cover;border-radius:7px;background:#333;flex-shrink:0}
+.sugg-txt{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#222;line-height:1.45}
+.p-footer{display:flex;align-items:center;padding:8px 12px;background:#fff;border-top:1px solid #e8e8ea;flex-shrink:0}
+#pg-msgs{flex-direction:column}
+.m-header{display:flex;align-items:center;justify-content:flex-end;padding:10px 12px;background:#fff;border-bottom:1.5px solid #e8e8ea;flex-shrink:0}
+.vids-btn{padding:9px 19px;background:#7ab8f0;color:#fff;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(91,142,240,0.3)}
+.vids-btn:active{background:#5B8EF0}
+.m-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px 14px 28px;overscroll-behavior-y:contain}
+.msg-entry{margin-bottom:22px}
+.msg-ts{text-align:center;font-size:12px;color:#aaa;font-weight:700;margin-bottom:8px}
+.msg-bbl{background:#d3d5d9;border-radius:18px;padding:15px 19px;font-family:'Nunito',sans-serif;font-size:16px;color:#222;line-height:1.6;width:88%;word-break:break-word}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.hidden{display:none!important}
+@media(max-height:500px)and(orientation:landscape){
+  #pg-auth{padding:10px 28px 60px}
+  .auth-logo-area{margin-bottom:12px}
+  .auth-logo{width:64px;height:64px;font-size:28px;margin-bottom:6px}
+  .auth-appname{font-size:20px}
+  .p-embed{aspect-ratio:16/7}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">S</div>
+  <div class="load-ring"></div>
+</div>
+
+<div id="admin-overlay">
+  <div class="admin-modal">
+    <h2>⚙️ Admin Panel</h2>
+    <p>Enter admin credentials</p>
+    <div class="adm-err" id="adm-login-err">Invalid username or password</div>
+    <input type="text" class="adm-inp" id="adm-u" placeholder="Admin Username" autocomplete="off" />
+    <input type="password" class="adm-inp" id="adm-p" placeholder="Admin Password" autocomplete="off" />
+    <button class="adm-login-btn" onclick="doAdminLogin()">Login</button>
+    <button class="adm-cancel-btn" onclick="closeAdminOverlay()">Cancel</button>
+  </div>
+</div>
+
+<!-- PAGE 1: AUTH -->
+<div class="page" id="pg-auth">
+  <div class="auth-logo-area">
+    <div class="auth-logo">
+      <img src="https://sites.google.com/view/satysum/home" alt="S" onerror="this.parentElement.innerHTML='S'" />
+    </div>
+    <div class="auth-appname">SatySum</div>
+  </div>
+  <div class="auth-form">
+    <button class="a-main-btn" onclick="goVideos()">Start</button>
+  </div>
+  <button class="admin-entry-btn" onclick="openAdminOverlay()">⚙ Admin</button>
+  <div class="tagline-bar" id="tagline">"Welcome back to SatySum! Continue watching your favorite videos."</div>
+</div>
+
+<!-- PAGE 2: ADMIN PANEL -->
+<div class="page" id="pg-admin">
+  <div class="adm-header">
+    <button class="adm-back-btn" onclick="goBackAdmin()">← Back</button>
+    <div class="adm-header-title">Admin Panel</div>
+    <span class="adm-badge">ADMIN</span>
+  </div>
+  <div class="adm-body">
+    <div class="adm-section">
+      <div class="adm-section-title">📺 Add YouTube Video</div>
+      <div class="adm-field-label">Video Title</div>
+      <input type="text" class="adm-field" id="adm-vid-title" placeholder="e.g. Chapter 5 Lecture" />
+      <div class="adm-field-label">YouTube Link</div>
+      <input type="url" class="adm-field" id="adm-vid-url" placeholder="https://youtu.be/..." />
+      <button class="adm-add-btn" id="adm-vid-btn" onclick="adminAddVideo()">+ Add Video</button>
+      <div class="adm-saving" id="adm-vid-saving">⏳ Saving to Firebase...</div>
+      <div class="adm-success" id="adm-vid-ok">✅ Video added! Sab devices pe update ho gaya.</div>
+      <div class="adm-list-wrap">
+        <div class="adm-list-title">Current Videos</div>
+        <div id="adm-vid-list"><div class="adm-empty">Loading...</div></div>
+      </div>
+    </div>
+    <div class="adm-section">
+      <div class="adm-section-title">💬 Add Message</div>
+      <div class="adm-field-label">Message Text</div>
+      <textarea class="adm-msg-textarea" id="adm-msg-text" placeholder="Type your message here..."></textarea>
+      <button class="adm-add-btn" id="adm-msg-btn" onclick="adminAddMessage()">+ Add Message</button>
+      <div class="adm-saving" id="adm-msg-saving">⏳ Saving to Firebase...</div>
+      <div class="adm-success" id="adm-msg-ok">✅ Message added! Sab devices pe update ho gaya.</div>
+      <div class="adm-list-wrap">
+        <div class="adm-list-title">Current Messages</div>
+        <div id="adm-msg-list"><div class="adm-empty">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: VIDEOS -->
+<div class="page" id="pg-videos">
+  <div class="v-header">
+    <div class="srch-wrap">
+      <span class="srch-ico">🔍</span>
+      <input type="search" class="srch-inp" id="srch-inp" placeholder="search" oninput="filterVids(this.value)" />
+    </div>
+    <button class="hdr-msg-btn" onclick="goMsgs()">Message</button>
+  </div>
+  <div class="v-scroll"><div id="v-list"></div></div>
+</div>
+
+<!-- PAGE 4: PLAYER -->
+<div class="page" id="pg-player">
+  <div class="p-header">
+    <button class="bk-btn" onclick="goBackPlayer()">←</button>
+    <div class="p-vid-title" id="p-title">Video</div>
+  </div>
+  <div class="p-embed" id="p-embed"></div>
+  <div class="sugg-scroll" id="sugg-scroll">
+    <div class="sugg-hdr">More Videos</div>
+    <div id="sugg-list"></div>
+  </div>
+  <div class="p-footer">
+    <button class="bk-btn" onclick="goBackPlayer()">← Back</button>
+  </div>
+</div>
+
+<!-- PAGE 5: MESSAGES -->
+<div class="page" id="pg-msgs">
+  <div class="m-header">
+    <button class="vids-btn" onclick="goBackMsgs()">Videos</button>
+  </div>
+  <div class="m-scroll"><div id="m-list"></div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ─── FIREBASE CONFIG ────────────────────────
+const firebaseConfig = {
+  databaseURL: "https://satysum-b524b-default-rtdb.firebaseio.com"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ─── ADMIN CREDENTIALS ──────────────────────
+const ADMIN_USERNAME = "satysum";
+const ADMIN_PASSWORD = "satyam89530keshari";
+
+// ─── STATE ──────────────────────────────────
+var VIDEOS   = [];
+var MESSAGES = [];
+var authMode = 'login';
+var curPage  = null;
+var PAGES    = ['pg-auth','pg-admin','pg-videos','pg-player','pg-msgs'];
+function $$(id){ return document.getElementById(id); }
+
+// ─── FIREBASE REAL-TIME LISTENERS ───────────
+// Jab bhi koi change ho Firebase pe, turant sabke screen pe update
+onValue(ref(db,'videos'), function(snap){
+  VIDEOS = [];
+  if(snap.exists()) snap.forEach(function(c){ VIDEOS.unshift({key:c.key,...c.val()}); });
+  if(curPage==='pg-videos') renderVids($$('srch-inp').value||'');
+  if(curPage==='pg-admin')  renderAdminVids();
+});
+onValue(ref(db,'messages'), function(snap){
+  MESSAGES = [];
+  if(snap.exists()) snap.forEach(function(c){ MESSAGES.unshift({key:c.key,...c.val()}); });
+  if(curPage==='pg-msgs')   renderMsgs();
+  if(curPage==='pg-admin')  renderAdminMsgs();
+});
+
+// ─── INIT ────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
+    var l=$$('loading'); l.style.opacity='0';
+    setTimeout(function(){ l.classList.add('hidden'); navTo('pg-auth',true); },420);
+  },1800);
+});
+
+// ─── NAVIGATION ─────────────────────────────
+function navTo(pageId,instant){
+  var fromId=curPage, toEl=$$(pageId), fromEl=fromId?$$(fromId):null;
+  var isBack=fromId&&PAGES.indexOf(pageId)<PAGES.indexOf(fromId);
+  if(!instant&&fromEl){
+    toEl.style.transition='none';
+    toEl.style.transform=isBack?'translateX(-100%)':'translateX(100%)';
+    void toEl.offsetWidth;
+    var dur='0.32s cubic-bezier(0.4,0,0.2,1)';
+    toEl.style.transition=fromEl.style.transition='transform '+dur;
+    toEl.style.transform='translateX(0)';
+    fromEl.style.transform=isBack?'translateX(100%)':'translateX(-100%)';
+    setTimeout(function(){ fromEl.style.transition='none'; fromEl.style.transform='translateX(100%)'; },340);
+  } else {
+    if(fromEl){fromEl.style.transition='none';fromEl.style.transform='translateX(100%)';}
+    toEl.style.transition='none'; toEl.style.transform='translateX(0)';
+  }
+  curPage=pageId;
+}
+
+// ─── ADMIN LOGIN ─────────────────────────────
+window.openAdminOverlay=function(){
+  $$('adm-u').value='';$$('adm-p').value='';
+  $$('adm-login-err').classList.remove('show');
+  $$('admin-overlay').classList.add('show');
+  setTimeout(function(){$$('adm-u').focus();},200);
+};
+window.closeAdminOverlay=function(){ $$('admin-overlay').classList.remove('show'); };
+window.doAdminLogin=function(){
+  var u=$$('adm-u').value.trim(), p=$$('adm-p').value;
+  if(u===ADMIN_USERNAME&&p===ADMIN_PASSWORD){
+    closeAdminOverlay(); navTo('pg-admin');
+    renderAdminVids(); renderAdminMsgs();
+  } else {
+    $$('adm-login-err').classList.add('show'); $$('adm-p').value='';
+  }
+};
+window.goBackAdmin=function(){ navTo('pg-auth'); };
+
+// ─── ADMIN PANEL RENDER ──────────────────────
+var FB_T="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='32'%3E%3Crect fill='%23333'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%23888' text-anchor='middle' dy='.35em'%3E%E2%96%B6%3C/text%3E%3C/svg%3E";
+
+function renderAdminVids(){
+  var c=$$('adm-vid-list');
+  if(!VIDEOS.length){c.innerHTML='<div class="adm-empty">No videos yet</div>';return;}
+  c.innerHTML=VIDEOS.map(function(v){
+    var t=ytThumb(v.url)||FB_T;
+    return '<div class="adm-list-item">'
+      +'<img class="adm-list-thumb" src="'+escH(t)+'" onerror="this.src=\''+FB_T+'\'" />'
+      +'<div class="adm-list-info"><div class="adm-list-name">'+escH(v.title)+'</div>'
+      +'<div class="adm-list-sub">'+escH(v.url)+'</div></div>'
+      +'<button class="adm-del-btn" onclick="adminDeleteVideo(\''+v.key+'\')">🗑</button></div>';
+  }).join('');
+}
+function renderAdminMsgs(){
+  var c=$$('adm-msg-list');
+  if(!MESSAGES.length){c.innerHTML='<div class="adm-empty">No messages yet</div>';return;}
+  c.innerHTML=MESSAGES.map(function(m){
+    var d=new Date(m.time);
+    var lb=d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="adm-msg-item"><div class="adm-list-info">'
+      +'<div class="adm-msg-text">'+escH(m.text)+'</div>'
+      +'<div class="adm-msg-time">'+lb+'</div></div>'
+      +'<button class="adm-del-btn" onclick="adminDeleteMessage(\''+m.key+'\')">🗑</button></div>';
+  }).join('');
+}
+
+// ─── ADMIN ACTIONS ───────────────────────────
+window.adminAddVideo=async function(){
+  var title=$$('adm-vid-title').value.trim(), url=$$('adm-vid-url').value.trim();
+  if(!title||!url){alert('Title aur URL dono bharo!');return;}
+  $$('adm-vid-btn').disabled=true;
+  $$('adm-vid-saving').classList.add('show');
+  try{
+    await push(ref(db,'videos'),{title,url});
+    $$('adm-vid-title').value=''; $$('adm-vid-url').value='';
+    $$('adm-vid-saving').classList.remove('show');
+    var ok=$$('adm-vid-ok'); ok.classList.add('show');
+    setTimeout(function(){ok.classList.remove('show');},3000);
+  }catch(e){ alert('Error: '+e.message); $$('adm-vid-saving').classList.remove('show'); }
+  $$('adm-vid-btn').disabled=false;
+};
+window.adminDeleteVideo=async function(key){
+  if(!confirm('Delete this video?'))return;
+  await remove(ref(db,'videos/'+key));
+};
+window.adminAddMessage=async function(){
+  var text=$$('adm-msg-text').value.trim();
+  if(!text){alert('Message likho!');return;}
+  $$('adm-msg-btn').disabled=true;
+  $$('adm-msg-saving').classList.add('show');
+  try{
+    await push(ref(db,'messages'),{text,time:new Date().toISOString()});
+    $$('adm-msg-text').value='';
+    $$('adm-msg-saving').classList.remove('show');
+    var ok=$$('adm-msg-ok'); ok.classList.add('show');
+    setTimeout(function(){ok.classList.remove('show');},3000);
+  }catch(e){ alert('Error: '+e.message); $$('adm-msg-saving').classList.remove('show'); }
+  $$('adm-msg-btn').disabled=false;
+};
+window.adminDeleteMessage=async function(key){
+  if(!confirm('Delete this message?'))return;
+  await remove(ref(db,'messages/'+key));
+};
+
+// ─── AUTH ────────────────────────────────────
+window.toggleAuthMode=function(){ authMode=authMode==='login'?'register':'login'; renderAuth(); };
+function renderAuth(){
+  var il=authMode==='login';
+  $$('a-main-btn').textContent=il?'Login':'Register';
+  $$('a-link-btn').textContent=il?'Register':'Login';
+  $$('tagline').textContent=il?'"Welcome back to SatySum! Continue watching your favorite videos."':'"Join SatySum today and start exploring amazing videos."';
+  $$('auth-notice').className='auth-notice'; $$('auth-notice').textContent='';
+  $$('a-user').value=''; $$('a-pass').value='';
+}
+function showAuthMsg(msg,type){
+  var el=$$('auth-notice'); el.textContent=msg;
+  el.className='auth-notice '+(type==='error'?'err':'ok');
+}
+window.doAuth=function(){
+  var user=$$('a-user').value.trim(), pass=$$('a-pass').value;
+  if(!user||!pass){showAuthMsg('Please fill in all fields.','error');return;}
+  var users=JSON.parse(localStorage.getItem('ss_users')||'[]');
+  if(authMode==='login'){
+    var found=users.find(function(u){return u.username.toLowerCase()===user.toLowerCase()&&u.password===pass;});
+    if(!found){showAuthMsg('Invalid username or password.','error');return;}
+    goVideos();
+  } else {
+    var exists=users.find(function(u){return u.username.toLowerCase()===user.toLowerCase();});
+    if(exists){showAuthMsg('Username already taken.','error');return;}
+    if(pass.length<4){showAuthMsg('Password must be at least 4 characters.','error');return;}
+    users.push({username:user,password:pass});
+    localStorage.setItem('ss_users',JSON.stringify(users));
+    showAuthMsg('Account created! Logging in…','ok');
+    setTimeout(goVideos,700);
+  }
+};
+
+// ─── HELPERS ────────────────────────────────
+function ytId(url){
+  if(!url)return null;
+  var m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+  return m?m[1]:null;
+}
+function ytThumb(url){var id=ytId(url);return id?'https://img.youtube.com/vi/'+id+'/hqdefault.jpg':'';}
+function ytEmbed(url){var id=ytId(url);return id?'https://www.youtube.com/embed/'+id+'?autoplay=1&controls=1&rel=0&playsinline=1&fs=1':'';}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ─── VIDEOS PAGE ─────────────────────────────
+function goVideos(){ navTo('pg-videos'); $$('srch-inp').value=''; renderVids(''); }
+window.goVideos=goVideos;
+function renderVids(q){
+  var c=$$('v-list'), vids=VIDEOS.slice();
+  if(q){var lq=q.toLowerCase();vids=vids.filter(function(v){return v.title.toLowerCase().includes(lq);});}
+  if(!vids.length){
+    c.innerHTML='<div class="empty-vids"><div style="font-size:52px">📺</div><div style="font-size:15px;color:#aaa;font-weight:500">'+(q?'No matching videos.':'No videos yet.')+'</div></div>';return;
+  }
+  var fb="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect fill='%23222'/%3E%3Ctext x='50%25' y='50%25' font-size='36' fill='%23555' text-anchor='middle' dy='.35em'%3E%E2%96%B6%3C/text%3E%3C/svg%3E";
+  c.innerHTML=vids.map(function(v){
+    var ri=VIDEOS.findIndex(function(x){return x.key===v.key;});
+    return '<div class="v-card" onclick="playVid('+ri+')">'
+      +'<div class="v-thumb-wrap"><img class="v-thumb-img" src="'+escH(ytThumb(v.url)||fb)+'" loading="lazy" onerror="this.src=\''+fb+'\'" />'
+      +'<div class="v-play-ovr"><div class="v-play-circle"><div class="v-tri"></div></div></div></div>'
+      +'<div class="v-title-bar">'+escH(v.title)+'</div></div>';
+  }).join('');
+}
+window.filterVids=function(q){renderVids(q);};
+window.playVid=function(idx){
+  var v=VIDEOS[idx]; if(!v)return;
+  $$('p-title').textContent=v.title;
+  $$('p-embed').innerHTML='<iframe src="'+escH(ytEmbed(v.url))+'" allowfullscreen allow="autoplay;fullscreen;picture-in-picture;encrypted-media"></iframe>';
+  var fb="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='90'%3E%3Crect fill='%23333'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='%23666' text-anchor='middle' dy='.35em'%3E%E2%96%B6%3C/text%3E%3C/svg%3E";
+  var suggs=VIDEOS.filter(function(_,i){return i!==idx;});
+  $$('sugg-list').innerHTML=suggs.length
+    ?suggs.map(function(s){
+        var si=VIDEOS.findIndex(function(x){return x.key===s.key;});
+        return '<div class="sugg-item" onclick="playVid('+si+')">'
+          +'<img class="sugg-thumb" src="'+escH(ytThumb(s.url)||fb)+'" loading="lazy" onerror="this.src=\''+fb+'\'" />'
+          +'<div class="sugg-txt">'+escH(s.title)+'</div></div>';
+      }).join('')
+    :'<div style="padding:20px;text-align:center;color:#aaa;font-size:14px">No other videos.</div>';
+  if(curPage!=='pg-player'){ navTo('pg-player'); setTimeout(function(){$$('pg-player').style.transform='none';},350); }
+  else $$('sugg-scroll').scrollTop=0;
+};
+window.goBackPlayer=function(){ navTo('pg-videos'); setTimeout(function(){$$('p-embed').innerHTML='';},340); };
+
+// ─── MESSAGES PAGE ───────────────────────────
+window.goMsgs=function(){ navTo('pg-msgs'); renderMsgs(); };
+function renderMsgs(){
+  var c=$$('m-list');
+  if(!MESSAGES.length){c.innerHTML='<div style="text-align:center;padding:60px 20px;color:#aaa;font-size:15px">No messages yet.</div>';return;}
+  var now=new Date(), yest=new Date(now); yest.setDate(yest.getDate()-1);
+  c.innerHTML=MESSAGES.map(function(m){
+    var d=new Date(m.time), label;
+    if(d.toDateString()===now.toDateString()) label='Today, '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    else if(d.toDateString()===yest.toDateString()) label='Yesterday, '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    else label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="msg-entry"><div class="msg-ts">'+label+'</div><div class="msg-bbl">'+escH(m.text)+'</div></div>';
+  }).join('');
+}
+window.goBackMsgs=function(){ navTo('pg-videos'); };
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&$$('admin-overlay').classList.contains('show')) doAdminLogin();
+});
+</script>
+</body>
+</html>
